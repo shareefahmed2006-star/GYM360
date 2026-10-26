@@ -19,9 +19,11 @@ class DatabaseConnection {
 
     try {
       this.client = new MongoClient(config.mongoUri, {
-        serverSelectionTimeoutMS: 5000,
+        serverSelectionTimeoutMS: 15000,
+        connectTimeoutMS: 15000,
         maxPoolSize: 20,
-        minPoolSize: 5
+        minPoolSize: 1,
+        tls: true
       });
 
       await this.client.connect();
@@ -61,36 +63,22 @@ class DatabaseConnection {
       return { isConnected: false, databaseName: config.dbName, pingTimeMs: -1 };
     }
 
-    const startTime = Date.now();
+    const start = Date.now();
     try {
-      // Non-destructive read command to verify cluster response
       await this.db.command({ ping: 1 });
-      const pingTimeMs = Date.now() - startTime;
-      return {
-        isConnected: true,
-        databaseName: config.dbName,
-        pingTimeMs
-      };
-    } catch (err) {
-      return {
-        isConnected: false,
-        databaseName: config.dbName,
-        pingTimeMs: -1
-      };
+      const pingTimeMs = Date.now() - start;
+      return { isConnected: true, databaseName: config.dbName, pingTimeMs };
+    } catch (error) {
+      return { isConnected: false, databaseName: config.dbName, pingTimeMs: -1 };
     }
   }
 
   public async disconnect(): Promise<void> {
     if (this.client) {
-      try {
-        await this.client.close();
-        console.log('[Database] MongoDB connection closed gracefully.');
-      } catch (error) {
-        console.error('[Database] Error closing MongoDB connection:', error);
-      } finally {
-        this.client = null;
-        this.db = null;
-      }
+      await this.client.close();
+      this.client = null;
+      this.db = null;
+      console.log('[Database] Disconnected from MongoDB.');
     }
   }
 }
