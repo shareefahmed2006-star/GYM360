@@ -40,12 +40,12 @@ export const createApp = (): Application => {
           return callback(null, true);
         }
 
-        if (config.allowedOrigins.includes(origin)) {
+        if (config.allowedOrigins.includes('*') || config.allowedOrigins.includes(origin)) {
           return callback(null, true);
         }
 
-        // Allow any local staging / development port on localhost and 127.0.0.1
-        if (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
+        // Allow any Vercel domain or local development port
+        if (/\.vercel\.app$/.test(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)) {
           return callback(null, true);
         }
 
@@ -60,6 +60,18 @@ export const createApp = (): Application => {
   // Request Parsers
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+
+  // Root welcome endpoint
+  app.get('/', (_req, res) => {
+    res.json({
+      status: 'online',
+      service: 'GYM360 Enterprise REST API Backend',
+      version: '1.0.0',
+      database: 'MongoDB Atlas Cloud Cluster (Active)',
+      healthCheck: '/api/health',
+      documentation: 'https://github.com/Shareefahmed2006-Star/gym360'
+    });
+  });
 
   // Base API routes
   app.use('/api/health', healthRoutes);
