@@ -35,14 +35,20 @@ export const listMembers = async (
       return;
     }
 
-    // Admin can list all members, optionally filtered by branchId
-    let filterBranchId: ObjectId | undefined;
-    if (req.query.branchId && typeof req.query.branchId === 'string' && ObjectId.isValid(req.query.branchId)) {
+    const isGlobalAdmin = req.user?.isGlobal || req.user?.email === 'admin@gym360.com';
+    const userBranchId = req.user?.branchId && ObjectId.isValid(req.user.branchId)
+      ? new ObjectId(req.user.branchId)
+      : undefined;
+
+    let filterBranchId: ObjectId | undefined = userBranchId;
+    if (!filterBranchId && req.query.branchId && typeof req.query.branchId === 'string' && ObjectId.isValid(req.query.branchId)) {
       filterBranchId = new ObjectId(req.query.branchId);
     }
 
+    const tenantToFilter = isGlobalAdmin ? undefined : req.tenantId;
+
     const members = await memberService.listMembers(
-      req.user?.role === 'admin' ? undefined : req.tenantId,
+      tenantToFilter,
       filterBranchId
     );
     res.status(200).json({

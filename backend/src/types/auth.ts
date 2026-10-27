@@ -7,6 +7,8 @@ export type UserStatus = 'active' | 'inactive';
 export interface UserDocument {
   _id: ObjectId;
   organizationId: ObjectId;
+  branchId?: ObjectId;
+  isGlobal?: boolean;
   firstName: string;
   lastName: string;
   email: string;
@@ -23,6 +25,8 @@ export interface UserDocument {
 export interface UserResponse {
   id: string;
   organizationId: string;
+  branchId?: string;
+  isGlobal?: boolean;
   firstName: string;
   lastName: string;
   email: string;
@@ -35,7 +39,10 @@ export interface UserResponse {
 
 export interface TokenPayload {
   userId: string;
+  email?: string;
   organizationId: string;
+  branchId?: string;
+  isGlobal?: boolean;
   role: UserRole;
   status: UserStatus;
   memberId?: string;

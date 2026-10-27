@@ -10,6 +10,8 @@ const sanitizeUser = (user: UserDocument): UserResponse => {
   return {
     id: user._id.toHexString(),
     organizationId: user.organizationId.toHexString(),
+    branchId: user.branchId ? user.branchId.toHexString() : undefined,
+    isGlobal: user.isGlobal || user.email === 'admin@gym360.com',
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
@@ -117,6 +119,7 @@ export const registerUser = async (data: RegisterDTO): Promise<{ user: UserRespo
   // 7. Generate JWT access token with verified memberId claim
   const token = generateToken({
     userId: createdUser._id.toHexString(),
+    email: createdUser.email,
     organizationId: createdUser.organizationId.toHexString(),
     role: createdUser.role,
     status: createdUser.status,
@@ -184,13 +187,17 @@ export const loginUser = async (data: LoginDTO): Promise<{ user: UserResponse; t
     }
   }
 
+  const isGlobalUser = user.isGlobal || user.email === 'admin@gym360.com';
   const token = generateToken({
     userId: user._id.toHexString(),
+    email: user.email,
     organizationId: user.organizationId.toHexString(),
     role: user.role,
     status: user.status,
     ...(verifiedMemberId ? { memberId: verifiedMemberId } : {}),
-    ...(verifiedTrainerId ? { trainerId: verifiedTrainerId } : {})
+    ...(verifiedTrainerId ? { trainerId: verifiedTrainerId } : {}),
+    ...(user.branchId ? { branchId: user.branchId.toHexString() } : {}),
+    isGlobal: isGlobalUser
   });
 
   return {

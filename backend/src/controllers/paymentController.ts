@@ -28,8 +28,13 @@ export const listPayments = async (
       paymentMethod: typeof req.query.paymentMethod === 'string' ? req.query.paymentMethod : undefined
     };
 
+    const isGlobalAdmin = req.user?.isGlobal || req.user?.email === 'admin@gym360.com';
+    if (!isGlobalAdmin && req.user?.branchId) {
+      filters.branchId = req.user.branchId;
+    }
+
     const payments = await paymentService.listPayments(
-      callerRole === 'admin' ? undefined : req.tenantId!,
+      isGlobalAdmin ? undefined : req.tenantId!,
       callerRole,
       callerMemberId,
       filters

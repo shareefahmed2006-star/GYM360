@@ -21,13 +21,16 @@ export class AnalyticsController {
         throw new AppError('Unauthorized: Missing tenant or user context.', 401);
       }
 
+      const isGlobalAdmin = req.user?.isGlobal || req.user?.email === 'admin@gym360.com';
+      const effectiveBranch = req.user?.branchId || (req.query.branchId as string | undefined);
+
       const branchObjectId = await AnalyticsService.validateTenantBranch(
         req.tenantId,
-        req.query.branchId as string | undefined
+        effectiveBranch
       );
 
       const data = await AnalyticsService.getExecutiveDashboard(
-        (req.user?.role === 'admin' ? undefined : req.tenantId) as any,
+        (isGlobalAdmin ? undefined : req.tenantId) as any,
         branchObjectId
       );
 
